@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"main/pkg/model"
 	"main/styles"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -23,6 +24,7 @@ func NewMenuModel() MenuModel {
 			"OS Version",
 			"OSQuery Info",
 			"Applications",
+			"Run All Queries",
 			"Quit",
 		},
 		Input:   "",
@@ -43,6 +45,40 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 
 	if choice == len(m.Choices)-1 {
 		return m, tea.Quit
+	}
+
+	var results []string
+	var errors []error
+
+	if choice == 3 {
+		queryTypes := []model.QueryType{
+			model.QueryTypeOSVersion,
+			model.QueryTypeOSQueryVersion,
+			model.QueryTypeApplications,
+		}
+
+		for _, queryType := range queryTypes {
+			output, err := ExecuteQuery(queryType)
+			if err != nil {
+				errors = append(errors, fmt.Errorf("error executing %s: %v", queryType, err))
+				continue
+			}
+			results = append(results, fmt.Sprintf("Results for %s:\n%s", queryType, string(output)))
+		}
+
+		if len(errors) > 0 {
+			errorMsgs := make([]string, len(errors))
+			for i, err := range errors {
+				errorMsgs[i] = err.Error()
+			}
+			m.Err = fmt.Errorf("errors occurred:\n%s", strings.Join(errorMsgs, "\n"))
+		}
+		if len(results) > 0 {
+			m.Result = strings.Join(results, "\n\n")
+		}
+		m.History = append(m.History, fmt.Sprintf("%d", choice+1))
+		m.Input = ""
+		return m, nil
 	}
 
 	var queryType model.QueryType
@@ -76,7 +112,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 
-		case "1", "2", "3", "4":
+		case "1", "2", "3", "4", "5":
 			m.Input = msg.String()
 			m.Cursor = int(msg.String()[0] - '1')
 			return m, nil
