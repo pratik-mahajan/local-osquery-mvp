@@ -4,14 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"main/pkg/model"
 	"os/exec"
+	"time"
 )
-
-type OSVersion struct {
-	ID           int       `json:"-" db:"id"`
-	Name         string    `json:"name" db:"name"`
-	Version      string    `json:"version" db:"version"`
-}
 
 func main() {
 	cmd := exec.Command("osqueryi", "--json", "SELECT * FROM os_version")
@@ -20,9 +16,15 @@ func main() {
 		log.Fatalf("Error running osqueryi: %v", err)
 	}
 
-	var versions []OSVersion
+	var versions []model.OSVersion
 	if err := json.Unmarshal(output, &versions); err != nil {
 		log.Fatalf("Error parsing JSON output: %v", err)
+	}
+
+	now := time.Now()
+	for i := range versions {
+		versions[i].CreatedAt = now
+		versions[i].UpdatedAt = now
 	}
 
 	prettyJSON, err := json.MarshalIndent(versions, "", "  ")
