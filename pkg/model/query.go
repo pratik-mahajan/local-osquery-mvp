@@ -11,5 +11,5 @@ const (
 var QueryMap = map[QueryType]string{
 	QueryTypeOSVersion:      "SELECT * FROM os_version",
 	QueryTypeOSQueryVersion: "SELECT * FROM osquery_info",
-	QueryTypeApplications:   "SELECT name, path, bundle_short_version FROM apps",
+	QueryTypeApplications:   "SELECT * FROM apps",
 }

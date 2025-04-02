@@ -47,6 +47,16 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 				return nil, fmt.Errorf("error saving OSQuery version to database: %v", err)
 			}
 		}
+	case model.QueryTypeApplications:
+		var applications []model.Application
+		if err := json.Unmarshal(output, &applications); err != nil {
+			return nil, fmt.Errorf("error unmarshaling Applications data: %v", err)
+		}
+		for _, app := range applications {
+			if err := db.SaveApplication(app); err != nil {
+				return nil, fmt.Errorf("error saving Application to database: %v", err)
+			}
+		}
 	}
 
 	return output, nil

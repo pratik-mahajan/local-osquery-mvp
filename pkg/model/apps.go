@@ -23,7 +23,7 @@ type Application struct {
 	Category             string    `json:"category"`
 	ApplescriptEnabled   string    `json:"applescript_enabled"`
 	Copyright            string    `json:"copyright"`
-	LastOpenedTime       float64   `json:"last_opened_time"`
+	LastOpenedTime       string `json:"last_opened_time"`
 	CreatedAt            time.Time `json:"created_at"`
 	UpdatedAt            time.Time `json:"updated_at"`
 }
