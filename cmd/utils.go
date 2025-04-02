@@ -1,7 +1,6 @@
 package cmdutils
 
 import (
-	"encoding/json"
 	"fmt"
 	"main/pkg/model"
 	"os/exec"
@@ -19,7 +18,7 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 		return nil, fmt.Errorf("unsupported query type: %s", queryType)
 	}
 
-	cmd := exec.Command("osqueryi", "--json", query)
+	cmd := exec.Command("osqueryi", query)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("error running osqueryi: %v", err)
@@ -29,10 +28,6 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 }
 
 func UnmarshalWithTimestamp(data []byte, v interface{}) error {
-	if err := json.Unmarshal(data, v); err != nil {
-		return fmt.Errorf("error parsing JSON output: %v", err)
-	}
-
 	if baseSlice, ok := v.(interface {
 		SetTimestamps(time.Time)
 	}); ok {
@@ -43,9 +38,8 @@ func UnmarshalWithTimestamp(data []byte, v interface{}) error {
 }
 
 func PrintJSON(v interface{}) (string, error) {
-	prettyJSON, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("error formatting JSON: %v", err)
+	if data, ok := v.([]byte); ok {
+		return string(data), nil
 	}
-	return string(prettyJSON), nil
+	return "", nil
 }

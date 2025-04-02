@@ -18,3 +18,12 @@ type OSVersion struct {
 	CreatedAt    time.Time `json:"-" db:"created_at"`
 	UpdatedAt    time.Time `json:"-" db:"updated_at"`
 }
+
+type OSVersionSlice []OSVersion
+
+func (s *OSVersionSlice) SetTimestamps(t time.Time) {
+	for i := range *s {
+		(*s)[i].CreatedAt = t
+		(*s)[i].UpdatedAt = t
+	}
+}
