@@ -5,7 +5,7 @@ import (
 )
 
 type OSQueryVersion struct {
-	PID           int       `json:"pid"`
+	PID           string    `json:"pid"`
 	UUID          string    `json:"uuid"`
 	InstanceID    string    `json:"instance_id"`
 	Version       string    `json:"version"`
@@ -14,9 +14,9 @@ type OSQueryVersion struct {
 	Extensions    string    `json:"extensions"`
 	BuildPlatform string    `json:"build_platform"`
 	BuildDistro   string    `json:"build_distro"`
-	StartTime     int       `json:"start_time"`
-	Watcher       int       `json:"watcher"`
-	PlatformMask  int       `json:"platform_mask"`
+	StartTime     string    `json:"start_time"`
+	Watcher       string    `json:"watcher"`
+	PlatformMask  string    `json:"platform_mask"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
