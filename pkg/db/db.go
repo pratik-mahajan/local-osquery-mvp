@@ -3,26 +3,23 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"main/pkg/config"
 	"main/pkg/model"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "postgres"
-)
-
 var db *sql.DB
 
 func InitDB() error {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	dbConfig, err := config.LoadConfig()
+	if err != nil {
+		return fmt.Errorf("error loading config: %v", err)
+	}
 
-	var err error
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
+
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		return fmt.Errorf("error connecting to the database: %v", err)
