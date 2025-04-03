@@ -2,9 +2,11 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	cmdutils "main/cmd"
 	"main/pkg/model"
 	"net/http"
+	"time"
 )
 
 type LatestDataResponse struct {
@@ -19,8 +21,18 @@ type combinedOSData struct {
 	OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
 }
 
+func logRequest(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		handler(w, r)
+		duration := time.Since(start)
+		timestamp := time.Now().Format("2006-01-02 15:04:05")
+		fmt.Printf("🌐 [%s] %s %s (took %v)\n", timestamp, r.Method, r.URL.Path, duration)
+	}
+}
+
 func RunServer(port string) error {
-	http.HandleFunc("/latest_data", handleLatestData)
+	http.HandleFunc("/latest_data", logRequest(handleLatestData))
 	return http.ListenAndServe(":"+port, nil)
 }
 

@@ -43,17 +43,30 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 			if err := db.SaveOSAndOSQueryInfo(osVersions[0], osQueryVersions[0]); err != nil {
 				return nil, fmt.Errorf("error saving OS and OSQuery info to database: %v", err)
 			}
-		}
 
-		combinedOutput := struct {
-			OSVersion   []model.OSVersion      `json:"os_version"`
-			OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
-		}{
-			OSVersion:   osVersions,
-			OSQueryInfo: osQueryVersions,
-		}
+			combinedData := struct {
+				OSVersion   []model.OSVersion      `json:"os_version"`
+				OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
+			}{
+				OSVersion:   osVersions,
+				OSQueryInfo: osQueryVersions,
+			}
 
-		return json.Marshal(combinedOutput)
+			jsonData, err := json.Marshal(combinedData)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling combined data: %v", err)
+			}
+
+			timestamp := time.Now().Format("2006-01-02 15:04:05")
+			fmt.Printf("🕒 [%s] ✅ OS (%s %s) and OSQuery (v%s) info stored in database\n",
+				timestamp,
+				osVersions[0].Name,
+				osVersions[0].Version,
+				osQueryVersions[0].Version)
+
+			return jsonData, nil
+		}
+		return []byte("[]"), nil
 
 	default:
 		cmd := exec.Command("osqueryi", "--json", query)
@@ -68,11 +81,18 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 			if err := json.Unmarshal(output, &applications); err != nil {
 				return nil, fmt.Errorf("error unmarshaling Applications data: %v", err)
 			}
+
+			count := 0
 			for _, app := range applications {
 				if err := db.SaveApplication(app); err != nil {
 					return nil, fmt.Errorf("error saving Application to database: %v", err)
 				}
+				count++
 			}
+			timestamp := time.Now().Format("2006-01-02 15:04:05")
+			fmt.Printf("🕒 [%s] ✅ %d applications stored in database\n", timestamp, count)
+
+			return output, nil
 		}
 
 		return output, nil

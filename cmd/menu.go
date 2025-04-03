@@ -61,7 +61,7 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 				errors = append(errors, fmt.Errorf("error executing %s: %v", queryType, err))
 				continue
 			}
-			results = append(results, fmt.Sprintf("Results for %s:\n%s", queryType, string(output)))
+			results = append(results, string(output))
 		}
 
 		if len(errors) > 0 {
@@ -72,7 +72,7 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 			m.Err = fmt.Errorf("errors occurred:\n%s", strings.Join(errorMsgs, "\n"))
 		}
 		if len(results) > 0 {
-			m.Result = strings.Join(results, "\n\n")
+			m.Result = strings.Join(results, "\n")
 		}
 		m.History = append(m.History, fmt.Sprintf("%d", choice+1))
 		m.Input = ""
