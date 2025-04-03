@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-type BaseResponse struct {
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 	query, found := model.QueryMap[queryType]
 	if !found {
@@ -49,6 +44,7 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 				return nil, fmt.Errorf("error saving OS and OSQuery info to database: %v", err)
 			}
 		}
+
 		combinedOutput := struct {
 			OSVersion   []model.OSVersion      `json:"os_version"`
 			OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
@@ -91,11 +87,4 @@ func UnmarshalWithTimestamp(data []byte, v interface{}) error {
 	}
 
 	return json.Unmarshal(data, v)
-}
-
-func PrintJSON(v interface{}) (string, error) {
-	if data, ok := v.([]byte); ok {
-		return string(data), nil
-	}
-	return "", nil
 }

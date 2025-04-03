@@ -103,54 +103,6 @@ func InitDB() error {
 	return nil
 }
 
-func SaveOSVersion(osVersion model.OSVersion) error {
-	_, err := db.Exec(`
-		INSERT INTO os_and_osquery (
-			name, version, major, minor, patch, build, 
-			platform, platform_like, codename, arch, extra
-		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
-		)`,
-		osVersion.Name,
-		osVersion.Version,
-		osVersion.Major,
-		osVersion.Minor,
-		osVersion.Patch,
-		osVersion.Build,
-		osVersion.Platform,
-		osVersion.PlatformLike,
-		osVersion.Codename,
-		osVersion.Arch,
-		osVersion.Extra,
-	)
-	return err
-}
-
-func SaveOSQueryVersion(osQueryVersion model.OSQueryVersion) error {
-	_, err := db.Exec(`
-		INSERT INTO os_and_osquery (
-			pid, uuid, instance_id, version, config_hash, config_valid,
-			extensions, build_platform, build_distro, start_time,
-			watcher, platform_mask
-		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-		)`,
-		osQueryVersion.PID,
-		osQueryVersion.UUID,
-		osQueryVersion.InstanceID,
-		osQueryVersion.Version,
-		osQueryVersion.ConfigHash,
-		osQueryVersion.ConfigValid,
-		osQueryVersion.Extensions,
-		osQueryVersion.BuildPlatform,
-		osQueryVersion.BuildDistro,
-		osQueryVersion.StartTime,
-		osQueryVersion.Watcher,
-		osQueryVersion.PlatformMask,
-	)
-	return err
-}
-
 func SaveApplication(app model.Application) error {
 	if app.BundleIdentifier == "" || app.Path == "" {
 		return nil
