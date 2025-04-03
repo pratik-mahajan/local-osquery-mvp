@@ -9,7 +9,14 @@ import (
 	"time"
 )
 
-func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
+type OutputFormat int
+
+const (
+	FormatJSON OutputFormat = iota
+	FormatText
+)
+
+func ExecuteQuery(queryType model.QueryType, format OutputFormat) ([]byte, error) {
 	query, found := model.QueryMap[queryType]
 	if !found {
 		return nil, fmt.Errorf("unsupported query type: %s", queryType)
@@ -44,29 +51,35 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 				return nil, fmt.Errorf("error saving OS and OSQuery info to database: %v", err)
 			}
 
-			combinedData := struct {
-				OSVersion   []model.OSVersion      `json:"os_version"`
-				OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
-			}{
-				OSVersion:   osVersions,
-				OSQueryInfo: osQueryVersions,
-			}
-
-			jsonData, err := json.Marshal(combinedData)
-			if err != nil {
-				return nil, fmt.Errorf("error marshaling combined data: %v", err)
-			}
-
 			timestamp := time.Now().Format("2006-01-02 15:04:05")
-			fmt.Printf("🕒 [%s] ✅ OS (%s %s) and OSQuery (v%s) info stored in database\n",
+
+			if format == FormatJSON {
+				combinedData := struct {
+					OSVersion   []model.OSVersion      `json:"os_version"`
+					OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
+				}{
+					OSVersion:   osVersions,
+					OSQueryInfo: osQueryVersions,
+				}
+
+				jsonData, err := json.Marshal(combinedData)
+				if err != nil {
+					return nil, fmt.Errorf("error marshaling combined data: %v", err)
+				}
+				return jsonData, nil
+			}
+
+			statusMsg := fmt.Sprintf("🕒 [%s] ✅ OS (%s %s) and OSQuery (v%s) info stored in database\n",
 				timestamp,
 				osVersions[0].Name,
 				osVersions[0].Version,
 				osQueryVersions[0].Version)
-
-			return jsonData, nil
+			return []byte(statusMsg), nil
 		}
-		return []byte("[]"), nil
+		if format == FormatJSON {
+			return []byte("[]"), nil
+		}
+		return []byte("No data found"), nil
 
 	default:
 		cmd := exec.Command("osqueryi", "--json", query)
@@ -89,10 +102,15 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 				}
 				count++
 			}
-			timestamp := time.Now().Format("2006-01-02 15:04:05")
-			fmt.Printf("🕒 [%s] ✅ %d applications stored in database\n", timestamp, count)
 
-			return output, nil
+			timestamp := time.Now().Format("2006-01-02 15:04:05")
+
+			if format == FormatJSON {
+				return output, nil
+			}
+
+			statusMsg := fmt.Sprintf("🕒 [%s] ✅ %d applications stored in database\n", timestamp, count)
+			return []byte(statusMsg), nil
 		}
 
 		return output, nil

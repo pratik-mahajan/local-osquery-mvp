@@ -56,7 +56,7 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 		var errors []error
 
 		for _, queryType := range queryTypes {
-			output, err := ExecuteQuery(queryType)
+			output, err := ExecuteQuery(queryType, FormatText)
 			if err != nil {
 				errors = append(errors, fmt.Errorf("error executing %s: %v", queryType, err))
 				continue
@@ -87,7 +87,7 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 		queryType = model.QueryTypeApplications
 	}
 
-	output, err := ExecuteQuery(queryType)
+	output, err := ExecuteQuery(queryType, FormatText)
 	if err != nil {
 		m.Err = err
 		m.Result = ""

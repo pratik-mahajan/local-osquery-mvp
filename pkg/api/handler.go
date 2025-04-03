@@ -51,7 +51,7 @@ func handleLatestData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, queryType := range queryTypes {
-		output, err := cmdutils.ExecuteQuery(queryType)
+		output, err := cmdutils.ExecuteQuery(queryType, cmdutils.FormatJSON)
 		if err != nil {
 			errors = append(errors, err.Error())
 			continue
