@@ -8,10 +8,15 @@ import (
 )
 
 type LatestDataResponse struct {
-	OSVersion    []model.OSVersion      `json:"os_version"`
-	OSQueryInfo  []model.OSQueryVersion `json:"osquery_info"`
-	Applications []model.Application    `json:"applications"`
-	Errors       []string               `json:"errors,omitempty"`
+	OSVersion    *model.OSVersion      `json:"os_version"`
+	OSQueryInfo  *model.OSQueryVersion `json:"osquery_info"`
+	Applications []model.Application   `json:"applications"`
+	Errors       []string              `json:"errors,omitempty"`
+}
+
+type combinedOSData struct {
+	OSVersion   []model.OSVersion      `json:"os_version"`
+	OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
 }
 
 func RunServer(port string) error {
@@ -29,8 +34,7 @@ func handleLatestData(w http.ResponseWriter, r *http.Request) {
 	var errors []string
 
 	queryTypes := []model.QueryType{
-		model.QueryTypeOSVersion,
-		model.QueryTypeOSQueryVersion,
+		model.QueryTypeOSAndOSQuery,
 		model.QueryTypeApplications,
 	}
 
@@ -42,21 +46,19 @@ func handleLatestData(w http.ResponseWriter, r *http.Request) {
 		}
 
 		switch queryType {
-		case model.QueryTypeOSVersion:
-			var osVersions []model.OSVersion
-			if err := json.Unmarshal(output, &osVersions); err != nil {
-				errors = append(errors, "Error parsing OS version data: "+err.Error())
+		case model.QueryTypeOSAndOSQuery:
+			var combinedData combinedOSData
+			if err := json.Unmarshal(output, &combinedData); err != nil {
+				errors = append(errors, "Error parsing OS and OSQuery data: "+err.Error())
 				continue
 			}
-			response.OSVersion = osVersions
 
-		case model.QueryTypeOSQueryVersion:
-			var osQueryVersions []model.OSQueryVersion
-			if err := json.Unmarshal(output, &osQueryVersions); err != nil {
-				errors = append(errors, "Error parsing OSQuery info data: "+err.Error())
-				continue
+			if len(combinedData.OSVersion) > 0 {
+				response.OSVersion = &combinedData.OSVersion[0]
 			}
-			response.OSQueryInfo = osQueryVersions
+			if len(combinedData.OSQueryInfo) > 0 {
+				response.OSQueryInfo = &combinedData.OSQueryInfo[0]
+			}
 
 		case model.QueryTypeApplications:
 			var applications []model.Application

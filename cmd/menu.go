@@ -21,8 +21,7 @@ type MenuModel struct {
 func NewMenuModel() MenuModel {
 	return MenuModel{
 		Choices: []string{
-			"OS Version",
-			"OSQuery Info",
+			"OS and OSQuery Info",
 			"Applications",
 			"Run All Queries",
 			"Quit",
@@ -47,15 +46,14 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 		return m, tea.Quit
 	}
 
-	var results []string
-	var errors []error
-
-	if choice == 3 {
+	if choice == 2 {
 		queryTypes := []model.QueryType{
-			model.QueryTypeOSVersion,
-			model.QueryTypeOSQueryVersion,
+			model.QueryTypeOSAndOSQuery,
 			model.QueryTypeApplications,
 		}
+
+		var results []string
+		var errors []error
 
 		for _, queryType := range queryTypes {
 			output, err := ExecuteQuery(queryType)
@@ -84,10 +82,8 @@ func (m MenuModel) ExecuteChoice(choice int) (MenuModel, tea.Cmd) {
 	var queryType model.QueryType
 	switch choice {
 	case 0:
-		queryType = model.QueryTypeOSVersion
+		queryType = model.QueryTypeOSAndOSQuery
 	case 1:
-		queryType = model.QueryTypeOSQueryVersion
-	case 2:
 		queryType = model.QueryTypeApplications
 	}
 
@@ -112,7 +108,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 
-		case "1", "2", "3", "4", "5":
+		case "1", "2", "3", "4":
 			m.Input = msg.String()
 			m.Cursor = int(msg.String()[0] - '1')
 			return m, nil

@@ -20,46 +20,67 @@ func ExecuteQuery(queryType model.QueryType) ([]byte, error) {
 		return nil, fmt.Errorf("unsupported query type: %s", queryType)
 	}
 
-	cmd := exec.Command("osqueryi", "--json", query)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("error running osqueryi: %v", err)
-	}
-
 	switch queryType {
-	case model.QueryTypeOSVersion:
+	case model.QueryTypeOSAndOSQuery:
+		osVersionCmd := exec.Command("osqueryi", "--json", "SELECT * FROM os_version")
+		osVersionOutput, err := osVersionCmd.CombinedOutput()
+		if err != nil {
+			return nil, fmt.Errorf("error running os_version query: %v", err)
+		}
+
+		osQueryCmd := exec.Command("osqueryi", "--json", "SELECT * FROM osquery_info")
+		osQueryOutput, err := osQueryCmd.CombinedOutput()
+		if err != nil {
+			return nil, fmt.Errorf("error running osquery_info query: %v", err)
+		}
+
 		var osVersions []model.OSVersion
-		if err := json.Unmarshal(output, &osVersions); err != nil {
+		var osQueryVersions []model.OSQueryVersion
+
+		if err := json.Unmarshal(osVersionOutput, &osVersions); err != nil {
 			return nil, fmt.Errorf("error unmarshaling OS version data: %v", err)
 		}
-		if len(osVersions) > 0 {
-			if err := db.SaveOSVersion(osVersions[0]); err != nil {
-				return nil, fmt.Errorf("error saving OS version to database: %v", err)
-			}
-		}
-	case model.QueryTypeOSQueryVersion:
-		var osQueryVersions []model.OSQueryVersion
-		if err := json.Unmarshal(output, &osQueryVersions); err != nil {
+		if err := json.Unmarshal(osQueryOutput, &osQueryVersions); err != nil {
 			return nil, fmt.Errorf("error unmarshaling OSQuery version data: %v", err)
 		}
-		if len(osQueryVersions) > 0 {
-			if err := db.SaveOSQueryVersion(osQueryVersions[0]); err != nil {
-				return nil, fmt.Errorf("error saving OSQuery version to database: %v", err)
-			}
-		}
-	case model.QueryTypeApplications:
-		var applications []model.Application
-		if err := json.Unmarshal(output, &applications); err != nil {
-			return nil, fmt.Errorf("error unmarshaling Applications data: %v", err)
-		}
-		for _, app := range applications {
-			if err := db.SaveApplication(app); err != nil {
-				return nil, fmt.Errorf("error saving Application to database: %v", err)
-			}
-		}
-	}
 
-	return output, nil
+		if len(osVersions) > 0 && len(osQueryVersions) > 0 {
+			if err := db.SaveOSAndOSQueryInfo(osVersions[0], osQueryVersions[0]); err != nil {
+				return nil, fmt.Errorf("error saving OS and OSQuery info to database: %v", err)
+			}
+		}
+		combinedOutput := struct {
+			OSVersion   []model.OSVersion      `json:"os_version"`
+			OSQueryInfo []model.OSQueryVersion `json:"osquery_info"`
+		}{
+			OSVersion:   osVersions,
+			OSQueryInfo: osQueryVersions,
+		}
+
+		return json.Marshal(combinedOutput)
+
+	default:
+		cmd := exec.Command("osqueryi", "--json", query)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return nil, fmt.Errorf("error running osqueryi: %v", err)
+		}
+
+		switch queryType {
+		case model.QueryTypeApplications:
+			var applications []model.Application
+			if err := json.Unmarshal(output, &applications); err != nil {
+				return nil, fmt.Errorf("error unmarshaling Applications data: %v", err)
+			}
+			for _, app := range applications {
+				if err := db.SaveApplication(app); err != nil {
+					return nil, fmt.Errorf("error saving Application to database: %v", err)
+				}
+			}
+		}
+
+		return output, nil
+	}
 }
 
 func UnmarshalWithTimestamp(data []byte, v interface{}) error {

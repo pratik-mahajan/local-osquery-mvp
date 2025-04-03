@@ -208,6 +208,44 @@ func SaveApplication(app model.Application) error {
 	return err
 }
 
+func SaveOSAndOSQueryInfo(osVersion model.OSVersion, osQueryVersion model.OSQueryVersion) error {
+	_, err := db.Exec(`
+		INSERT INTO os_and_osquery (
+			name, version, major, minor, patch, build, 
+			platform, platform_like, codename, arch, extra,
+			pid, uuid, instance_id, config_hash, config_valid,
+			extensions, build_platform, build_distro, start_time,
+			watcher, platform_mask
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+			$12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+		)`,
+		osVersion.Name,
+		osVersion.Version,
+		osVersion.Major,
+		osVersion.Minor,
+		osVersion.Patch,
+		osVersion.Build,
+		osVersion.Platform,
+		osVersion.PlatformLike,
+		osVersion.Codename,
+		osVersion.Arch,
+		osVersion.Extra,
+		osQueryVersion.PID,
+		osQueryVersion.UUID,
+		osQueryVersion.InstanceID,
+		osQueryVersion.ConfigHash,
+		osQueryVersion.ConfigValid,
+		osQueryVersion.Extensions,
+		osQueryVersion.BuildPlatform,
+		osQueryVersion.BuildDistro,
+		osQueryVersion.StartTime,
+		osQueryVersion.Watcher,
+		osQueryVersion.PlatformMask,
+	)
+	return err
+}
+
 func Close() error {
 	if db != nil {
 		return db.Close()
